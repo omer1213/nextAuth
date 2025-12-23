@@ -1,9 +1,13 @@
-import { auth } from "@/auth";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { auth } from "@/auth";
 
-export default auth((req) => {
-  const { nextUrl } = req;
-  const isLoggedIn = !!req.auth;
+export default async function middleware(request: NextRequest) {
+  const { nextUrl } = request;
+  
+  // Get session
+  const session = await auth();
+  const isLoggedIn = !!session?.user;
 
   // Define protected routes (routes that require authentication)
   const protectedRoutes = ["/dashboard", "/profile", "/settings"];
@@ -32,7 +36,7 @@ export default auth((req) => {
 
   // Allow the request to continue
   return NextResponse.next();
-});
+}
 
 // Specify which routes this middleware should run on
 // This runs on all routes except API routes, static files, and images

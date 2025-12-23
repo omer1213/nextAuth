@@ -8,6 +8,9 @@ import { FormInput } from "@/components/form-input";
 import { SubmitButton } from "@/components/submit-button";
 import { AlertMessage } from "@/components/alert-message";
 
+// Force dynamic rendering for this page (required for useSearchParams)
+export const dynamic = 'force-dynamic';
+
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
