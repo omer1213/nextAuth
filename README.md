@@ -1,36 +1,227 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NextAuth + Supabase Authentication System
+
+A complete, production-ready authentication system built with Next.js 16, NextAuth.js v5, and Supabase.
+
+## Features
+
+- Email & Password Authentication
+- Google OAuth Integration
+- Password Reset Flow
+- Protected Routes with Middleware
+- Session Management (JWT)
+- User Profile Management
+- Responsive UI with Tailwind CSS
+- TypeScript Support
+- Comprehensive Error Handling
+
+## Tech Stack
+
+- **Framework:** Next.js 16.1.0 (App Router)
+- **Authentication:** NextAuth.js v5
+- **Database:** Supabase (PostgreSQL)
+- **Styling:** Tailwind CSS v4
+- **Language:** TypeScript
+- **Password Hashing:** bcryptjs
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js 18+ installed
+- Supabase account
+- Google Cloud Console account (for OAuth)
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/omer1213/nextAuth.git
+   cd nextAuth
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables:**
+   
+   Create a `.env.local` file in the root directory:
+   ```env
+   # NextAuth Configuration
+   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_SECRET=your-random-secret-key
+   
+   # Supabase Configuration
+   NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+   SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+   
+   # Google OAuth Configuration
+   GOOGLE_CLIENT_ID=your-google-client-id
+   GOOGLE_CLIENT_SECRET=your-google-client-secret
+   ```
+   
+   See `ENV_SETUP_GUIDE.md` for detailed instructions on obtaining these credentials.
+
+4. **Set up the database:**
+   
+   Run the SQL migration in your Supabase SQL Editor:
+   ```bash
+   # Copy contents from supabase/migrations/001_auth_schema.sql
+   # Paste and run in Supabase SQL Editor
+   ```
+
+5. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+
+6. **Open the application:**
+   
+   Visit [http://localhost:3000](http://localhost:3000)
+
+## Project Structure
+
+```
+my-next-app/
+├── app/                          # Next.js App Router
+│   ├── (auth)/                   # Authentication pages
+│   │   ├── login/                # Login page
+│   │   ├── signup/               # Signup page
+│   │   ├── forgot-password/      # Password reset request
+│   │   └── reset-password/       # Password reset confirmation
+│   ├── api/                      # API routes
+│   │   └── auth/                 # Auth API endpoints
+│   ├── dashboard/                # Protected dashboard
+│   ├── profile/                  # Protected profile page
+│   └── layout.tsx                # Root layout
+├── components/                   # Reusable components
+│   ├── user-menu.tsx             # User dropdown menu
+│   ├── navbar.tsx                # Navigation bar
+│   ├── auth-status.tsx           # Auth status indicator
+│   ├── form-input.tsx            # Form input component
+│   ├── submit-button.tsx         # Submit button with loading
+│   ├── alert-message.tsx         # Alert component
+│   └── session-provider.tsx      # Session provider wrapper
+├── lib/                          # Utility functions
+│   └── auth-helpers.ts           # Auth helper functions
+├── supabase/                     # Database
+│   └── migrations/               # SQL migrations
+├── types/                        # TypeScript types
+│   └── next-auth.d.ts            # NextAuth type extensions
+├── auth.ts                       # NextAuth configuration
+├── middleware.ts                 # Route protection middleware
+└── .env.local                    # Environment variables (not in git)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Authentication Flows
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 1. User Registration
+- Navigate to `/signup`
+- Fill in name, email, and password
+- Password is hashed with bcryptjs
+- User created in Supabase
+- Auto-login after registration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 2. User Login
+- Navigate to `/login`
+- Enter email and password OR
+- Click "Sign in with Google"
+- Redirect to dashboard on success
 
-## Learn More
+### 3. Password Reset
+- Click "Forgot password?" on login
+- Enter email address
+- Receive reset token (email integration ready)
+- Set new password
+- Login with new credentials
 
-To learn more about Next.js, take a look at the following resources:
+### 4. Protected Routes
+- Middleware automatically protects routes
+- Unauthenticated users redirected to login
+- Callback URL preserves intended destination
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Documentation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **ENV_SETUP_GUIDE.md** - Environment variable setup instructions
+- **TESTING.md** - Comprehensive testing guide
+- **PROCESS.md** - Development progress tracker
 
-## Deploy on Vercel
+## Testing
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+See `TESTING.md` for a complete testing checklist covering:
+- User registration and login
+- OAuth integration
+- Password reset flow
+- Protected routes
+- Session management
+- Error handling
+- Security checks
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Security Features
+
+- Passwords hashed with bcryptjs (12 salt rounds)
+- JWT sessions with httpOnly cookies
+- Row Level Security (RLS) on Supabase
+- CSRF protection
+- Secure session management
+- Environment variables for sensitive data
+
+## Deployment
+
+### Vercel (Recommended)
+
+1. Push code to GitHub
+2. Import project in Vercel
+3. Add environment variables
+4. Deploy
+
+### Other Platforms
+
+Compatible with any Node.js hosting platform:
+- Netlify
+- Railway
+- Render
+- AWS
+- Digital Ocean
+
+## Environment Variables
+
+Required for production:
+- `NEXTAUTH_URL` - Your production URL
+- `NEXTAUTH_SECRET` - Random secret key
+- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anon key
+- `SUPABASE_SERVICE_ROLE_KEY` - Supabase service key
+- `GOOGLE_CLIENT_ID` - Google OAuth client ID
+- `GOOGLE_CLIENT_SECRET` - Google OAuth secret
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is open source and available under the MIT License.
+
+## Support
+
+For issues and questions:
+- Open an issue on GitHub
+- Check `TESTING.md` for common problems
+- Review `ENV_SETUP_GUIDE.md` for setup help
+
+## Acknowledgments
+
+- [Next.js](https://nextjs.org/)
+- [NextAuth.js](https://next-auth.js.org/)
+- [Supabase](https://supabase.com/)
+- [Tailwind CSS](https://tailwindcss.com/)
+
+---
+
+**Built with ❤️ using Next.js, NextAuth, and Supabase**
+
+**Version:** 1.0.0  
+**Last Updated:** December 22, 2025
