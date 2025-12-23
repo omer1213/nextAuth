@@ -87,6 +87,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           throw new Error("Invalid email or password");
         }
 
+        // Check if email is verified
+        if (!user.email_verified) {
+          throw new Error(
+            "Please verify your email before logging in. Check your email for the verification link."
+          );
+        }
+
         // Return user object (without password hash)
         return {
           id: user.id,

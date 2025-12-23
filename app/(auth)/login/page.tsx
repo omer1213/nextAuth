@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -11,7 +11,7 @@ import { AlertMessage } from "@/components/alert-message";
 // Force dynamic rendering for this page (required for useSearchParams)
 export const dynamic = 'force-dynamic';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
@@ -69,7 +69,20 @@ export default function LoginPage() {
 
         {/* Error Alert */}
         {error && (
-          <AlertMessage type="error" message={error} />
+          <div className="space-y-2">
+            <AlertMessage type="error" message={error} />
+            {error.includes("verify") && (
+              <p className="text-sm text-center text-gray-600">
+                Didn't receive the link?{" "}
+                <Link
+                  href="/resend-verification"
+                  className="text-blue-600 hover:text-blue-800 font-medium underline"
+                >
+                  Resend verification email
+                </Link>
+              </p>
+            )}
+          </div>
         )}
 
         {/* Login Form */}
@@ -170,5 +183,20 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
