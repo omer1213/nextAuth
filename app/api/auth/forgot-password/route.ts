@@ -42,38 +42,47 @@ export async function POST(request: NextRequest) {
     expiresAt.setHours(expiresAt.getHours() + 24); // Token expires in 24 hours
 
     // Save token to database
-    const { error: tokenError } = await supabase
+    const { data: tokenData, error: tokenError } = await supabase
       .from("verification_tokens")
       .insert({
         identifier: email.toLowerCase(),
         token: resetToken,
         expires: expiresAt.toISOString(),
-      });
+      })
+      .select();
 
     if (tokenError) {
-      console.error("Error creating reset token:", tokenError);
+      console.error("❌ Error creating reset token:", tokenError);
+      console.error("Token error details:", JSON.stringify(tokenError, null, 2));
       return NextResponse.json(
         { error: "Failed to generate reset token" },
         { status: 500 }
       );
     }
 
+    console.log("✅ Password reset token created successfully:", {
+      identifier: email.toLowerCase(),
+      token: resetToken.substring(0, 10) + "...",
+      expires: expiresAt.toISOString(),
+      inserted: tokenData,
+    });
+
     // In production, you would send an email here with the reset link:
     // const resetLink = `${process.env.NEXTAUTH_URL}/reset-password/${resetToken}`;
     // await sendEmail(email, "Password Reset", resetLink);
 
-    // For development, we'll just return success
-    // You can log the token for testing
-    console.log(`Reset token for ${email}: ${resetToken}`);
-    console.log(
-      `Reset link: ${process.env.NEXTAUTH_URL}/reset-password/${resetToken}`
-    );
+    // Log reset token for development
+    if (process.env.NODE_ENV === "development") {
+      console.log(`Reset token for ${email}: ${resetToken}`);
+      console.log(
+        `Reset link: ${process.env.NEXTAUTH_URL}/reset-password/${resetToken}`
+      );
+    }
 
     return NextResponse.json({
       success: true,
       message:
         "If an account with that email exists, a password reset link has been sent.",
-      // REMOVE THIS IN PRODUCTION - only for development/testing
       resetToken: process.env.NODE_ENV === "development" ? resetToken : undefined,
     });
   } catch (error) {

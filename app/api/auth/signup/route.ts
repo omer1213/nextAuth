@@ -82,20 +82,32 @@ export async function POST(request: NextRequest) {
     expiresAt.setHours(expiresAt.getHours() + 24); // Token valid for 24 hours
 
     // Store verification token
-    const { error: tokenError } = await supabase
+    console.log("🔍 Attempting to insert verification token...");
+    console.log("🔍 Email:", email.toLowerCase());
+    console.log("🔍 Token (first 10 chars):", verificationToken.substring(0, 10));
+    
+    const { data: tokenData, error: tokenError } = await supabase
       .from("verification_tokens")
       .insert({
         identifier: email.toLowerCase(),
         token: verificationToken,
         expires: expiresAt.toISOString(),
-      });
+      })
+      .select();
 
     if (tokenError) {
-      console.error("Error creating verification token:", tokenError);
-      return NextResponse.json(
-        { error: "Failed to create account. Please try again." },
-        { status: 500 }
-      );
+      console.error("❌ ERROR creating verification token!");
+      console.error("❌ Error code:", tokenError.code);
+      console.error("❌ Error message:", tokenError.message);
+      console.error("❌ Error details:", tokenError.details);
+      console.error("❌ Error hint:", tokenError.hint);
+      console.error("❌ Full error:", JSON.stringify(tokenError, null, 2));
+      
+      // Don't fail signup if token creation fails - user can request resend
+      console.warn("⚠️ User created but token failed - user can request resend");
+    } else {
+      console.log("✅ Verification token created successfully!");
+      console.log("✅ Token data:", tokenData);
     }
 
     // Send verification email

@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { Navbar } from "@/components/navbar";
+import { ProfileActions } from "@/components/profile-actions";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -126,23 +127,7 @@ export default async function ProfilePage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-8 flex gap-4">
-              <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                Edit Profile
-              </button>
-              <button className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
-                Change Password
-              </button>
-            </div>
-
-            {/* Info Note */}
-            <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
-                <strong>Note:</strong> This is a demo profile page to showcase
-                protected routes. In Phase 6, we'll add actual edit
-                functionality!
-              </p>
-            </div>
+            <ProfileActions currentName={session.user.name || ""} />
           </div>
         </div>
       </div>

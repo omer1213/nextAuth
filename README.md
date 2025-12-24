@@ -62,7 +62,7 @@ A complete, production-ready authentication system built with Next.js 16, NextAu
    GOOGLE_CLIENT_SECRET=your-google-client-secret
    ```
    
-   See `ENV_SETUP_GUIDE.md` for detailed instructions on obtaining these credentials.
+   For detailed setup instructions, see the Supabase and Google Cloud Console documentation.
 
 4. **Set up the database:**
    
@@ -144,15 +144,13 @@ my-next-app/
 
 ## Documentation
 
-- **ENV_SETUP_GUIDE.md** - Environment variable setup instructions
-- **TESTING.md** - Comprehensive testing guide
 - **PROCESS.md** - Development progress tracker
 
 ## Testing
 
-See `TESTING.md` for a complete testing checklist covering:
+Test the following features:
 - User registration and login
-- OAuth integration
+- Email verification flow
 - Password reset flow
 - Protected routes
 - Session management
@@ -209,8 +207,8 @@ This project is open source and available under the MIT License.
 
 For issues and questions:
 - Open an issue on GitHub
-- Check `TESTING.md` for common problems
-- Review `ENV_SETUP_GUIDE.md` for setup help
+- Review the codebase and documentation
+- Check environment variables are properly configured
 
 ## Acknowledgments
 

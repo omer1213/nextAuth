@@ -1,7 +1,6 @@
 import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
-import { SupabaseAdapter } from "@auth/supabase-adapter";
+import Google from "next-auth/providers/google";
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 
@@ -18,30 +17,27 @@ const supabase = createClient(
 );
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  // Use Supabase adapter to store users and accounts
-  // Note: Adapter is optional with JWT sessions but helps sync OAuth accounts
-  adapter: SupabaseAdapter({
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    secret: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  }),
+  // No adapter needed - we use JWT sessions and handle users directly
+  // Adapter was only needed for OAuth (which we removed) and database sessions
 
   // Configure session strategy
   session: {
-    strategy: "jwt", // Use JWT for sessions (stateless)
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    strategy: "jwt", // Use JWT for sessions (stateless, no database needed)
+    maxAge: 60, // 1 minute (for testing - change back to 30 * 24 * 60 * 60 for production)
+    // You can change this to any duration:
+    // 1 minute: 60 (current - for testing)
+    // 1 hour: 60 * 60
+    // 1 day: 24 * 60 * 60
+    // 7 days: 7 * 24 * 60 * 60
+    // 30 days: 30 * 24 * 60 * 60
+    // 90 days: 90 * 24 * 60 * 60
   },
 
-  // Trust host for production
+  // Trust host (required for Vercel, safe for localhost)
   trustHost: true,
 
   // Authentication providers
   providers: [
-    // Google OAuth Provider
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-
     // Credentials Provider (Email/Password)
     Credentials({
       name: "credentials",
@@ -69,7 +65,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Check if user has a password (credentials account)
         if (!user.password_hash) {
           throw new Error(
-            "This account uses OAuth login. Please sign in with Google."
+            "This account does not have a password. Please contact support."
           );
         }
 
@@ -100,22 +96,67 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
+    // Google OAuth Provider
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
   ],
 
   // Callback functions
   callbacks: {
     // JWT callback - called when JWT is created or updated
     async jwt({ token, user, account }) {
-      // On initial sign in, add user info to token
-      if (user) {
-        token.id = user.id;
-        token.email = user.email;
-        token.name = user.name;
-        token.picture = user.image;
-      }
+      // On initial sign in (OAuth or Credentials)
+      if (user && account) {
+        // OAuth sign in (Google)
+        if (account.provider === "google") {
+          // Check if user exists in database
+          const { data: existingUser } = await supabase
+            .from("users")
+            .select("*")
+            .eq("email", user.email)
+            .single();
 
-      // Store OAuth provider info
-      if (account) {
+          if (existingUser) {
+            // User exists - use their ID
+            token.id = existingUser.id;
+            token.email = existingUser.email;
+            token.name = existingUser.name || user.name;
+            token.picture = existingUser.image || user.image;
+          } else {
+            // New OAuth user - create in database
+            const { data: newUser, error: createError } = await supabase
+              .from("users")
+              .insert({
+                email: user.email!,
+                name: user.name || null,
+                image: user.image || null,
+                email_verified: new Date().toISOString(), // OAuth emails are pre-verified
+                password_hash: null, // No password for OAuth users
+              })
+              .select()
+              .single();
+
+            if (createError || !newUser) {
+              console.error("Error creating OAuth user:", createError);
+              throw new Error("Failed to create user account");
+            }
+
+            token.id = newUser.id;
+            token.email = newUser.email;
+            token.name = newUser.name;
+            token.picture = newUser.image;
+          }
+        } else {
+          // Credentials sign in - user already exists
+          token.id = user.id;
+          token.email = user.email;
+          token.name = user.name;
+          token.picture = user.image;
+        }
+
+        // Store OAuth provider info
         token.provider = account.provider;
       }
 
@@ -124,6 +165,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
     // Session callback - called when session is checked
     async session({ session, token }) {
+      // If token is null (expired), return null session
+      if (!token) {
+        if (process.env.NODE_ENV === "development") {
+          console.log("❌ Session callback: Token is null");
+        }
+        return null as any;
+      }
+
+      // Check if session is expired using session.expires (set by NextAuth based on maxAge)
+      const expiresAt = session.expires ? new Date(session.expires) : null;
+      const now = new Date();
+      
+      if (expiresAt && expiresAt < now) {
+        // Session is expired - return null to invalidate
+        return null as any;
+      }
+
+      // Also check token.exp as backup (exp is in seconds, Date.now() is in milliseconds)
+      if (token.exp && token.exp * 1000 < Date.now()) {
+        // Token is expired - return null to invalidate
+        return null as any;
+      }
+
       // Add user info from token to session
       if (token && session.user) {
         session.user.id = token.id as string;
