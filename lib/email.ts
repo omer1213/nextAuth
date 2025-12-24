@@ -4,6 +4,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Email sender address - Resend requires verified domain
 // For testing, use onboarding@resend.dev
+// Later: Change to your verified domain email (e.g., noreply@yourdomain.com)
 const FROM_EMAIL = "onboarding@resend.dev";
 
 export async function sendVerificationEmail(

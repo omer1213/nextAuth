@@ -19,6 +19,7 @@ const supabase = createClient(
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // Use Supabase adapter to store users and accounts
+  // Note: Adapter is optional with JWT sessions but helps sync OAuth accounts
   adapter: SupabaseAdapter({
     url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
     secret: process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -30,20 +31,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 
+  // Trust host for production
+  trustHost: true,
+
   // Authentication providers
   providers: [
     // Google OAuth Provider
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      // Request user profile information
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code",
-        },
-      },
     }),
 
     // Credentials Provider (Email/Password)
