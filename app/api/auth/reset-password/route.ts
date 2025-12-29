@@ -21,9 +21,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate password strength
-    if (password.length < 8) {
+    const passwordValidation = validatePasswordStrength(password);
+    if (!passwordValidation.isValid) {
       return NextResponse.json(
-        { error: "Password must be at least 8 characters long" },
+        { error: passwordValidation.errors.join(". ") },
         { status: 400 }
       );
     }
@@ -99,7 +100,10 @@ export async function POST(request: NextRequest) {
       message: "Password has been reset successfully. You can now log in.",
     });
   } catch (error) {
-    console.error("Reset password error:", error);
+    // Log error without sensitive data
+    if (process.env.NODE_ENV === "development") {
+      console.error("Reset password error");
+    }
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 }

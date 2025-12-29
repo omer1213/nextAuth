@@ -15,7 +15,6 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
-  const isExpired = searchParams.get("expired") === "true";
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -25,25 +24,24 @@ function LoginForm() {
     password: "",
   });
 
-  // Check for expired parameter and OAuth errors on mount and when searchParams change
+  // Check for expired parameter
   useEffect(() => {
     const expired = searchParams.get("expired");
-    const oauthError = searchParams.get("error");
-    
     if (expired === "true") {
       setShowExpiredMessage(true);
     } else {
       setShowExpiredMessage(false);
     }
+  }, [searchParams]);
 
-    // Handle OAuth errors
+  // Handle OAuth errors from URL
+  useEffect(() => {
+    const oauthError = searchParams.get("error");
     if (oauthError) {
       if (oauthError === "Configuration") {
         setError("Google OAuth is not properly configured. Please contact support.");
       } else if (oauthError === "AccessDenied") {
         setError("Access denied. Please try again.");
-      } else {
-        setError("An error occurred during Google sign in. Please try again.");
       }
     }
   }, [searchParams]);
@@ -61,10 +59,9 @@ function LoginForm() {
       });
 
       if (result?.error) {
-        setError("Invalid email or password");
+        setError(result.error);
         setIsLoading(false);
       } else {
-        // Success - redirect to callback URL or dashboard
         router.push(callbackUrl);
         router.refresh();
       }
@@ -85,7 +82,6 @@ function LoginForm() {
       setError("Failed to sign in with Google. Please try again.");
     }
   };
-
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">

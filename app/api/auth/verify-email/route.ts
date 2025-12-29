@@ -48,7 +48,10 @@ export async function POST(request: NextRequest) {
       .eq("email", verificationData.identifier);
 
     if (updateError) {
-      console.error("Error updating user:", updateError);
+      // Log error without sensitive data
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error updating user:", updateError.message);
+      }
       return NextResponse.json(
         { error: "Failed to verify email. Please try again." },
         { status: 500 }
@@ -66,7 +69,10 @@ export async function POST(request: NextRequest) {
       message: "Email verified successfully! You can now login.",
     });
   } catch (error) {
-    console.error("Verification error:", error);
+    // Log error without sensitive data
+    if (process.env.NODE_ENV === "development") {
+      console.error("Verification error");
+    }
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 }

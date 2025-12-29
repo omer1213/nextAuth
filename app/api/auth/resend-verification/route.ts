@@ -65,7 +65,10 @@ export async function POST(request: NextRequest) {
       });
 
     if (tokenError) {
-      console.error("Error creating verification token:", tokenError);
+      // Log error without sensitive data
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error creating verification token:", tokenError.message);
+      }
       return NextResponse.json(
         { error: "Failed to send verification link. Please try again." },
         { status: 500 }
@@ -79,9 +82,11 @@ export async function POST(request: NextRequest) {
         user.name || "there",
         verificationToken
       );
-      console.log("✅ Verification email resent to:", email);
     } catch (emailError) {
-      console.error("Error sending verification email:", emailError);
+      // Log error without sensitive data
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error sending verification email");
+      }
       return NextResponse.json(
         { error: "Failed to send verification email. Please try again later." },
         { status: 500 }
@@ -93,7 +98,10 @@ export async function POST(request: NextRequest) {
       message: "Verification link sent! Check your email inbox.",
     });
   } catch (error) {
-    console.error("Resend verification error:", error);
+    // Log error without sensitive data
+    if (process.env.NODE_ENV === "development") {
+      console.error("Resend verification error");
+    }
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 }

@@ -30,9 +30,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (newPassword.length < 8) {
+    // Validate password strength
+    const passwordValidation = validatePasswordStrength(newPassword);
+    if (!passwordValidation.isValid) {
       return NextResponse.json(
-        { error: "New password must be at least 8 characters long" },
+        { error: passwordValidation.errors.join(". ") },
         { status: 400 }
       );
     }
@@ -96,7 +98,10 @@ export async function POST(request: NextRequest) {
       message: "Password changed successfully",
     });
   } catch (error) {
-    console.error("Change password error:", error);
+    // Log error without sensitive data
+    if (process.env.NODE_ENV === "development") {
+      console.error("Change password error");
+    }
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 }

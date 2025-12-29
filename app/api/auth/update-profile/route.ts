@@ -65,7 +65,10 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Update profile error:", error);
+    // Log error without sensitive data
+    if (process.env.NODE_ENV === "development") {
+      console.error("Update profile error");
+    }
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 }

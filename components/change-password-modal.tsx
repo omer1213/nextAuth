@@ -31,7 +31,31 @@ export function ChangePasswordModal({
 
     // Validation
     if (newPassword.length < 8) {
-      setError("New password must be at least 8 characters long");
+      setError("Password must be at least 8 characters long");
+      setLoading(false);
+      return;
+    }
+    
+    if (!/[A-Z]/.test(newPassword)) {
+      setError("Password must contain at least one uppercase letter");
+      setLoading(false);
+      return;
+    }
+    
+    if (!/[a-z]/.test(newPassword)) {
+      setError("Password must contain at least one lowercase letter");
+      setLoading(false);
+      return;
+    }
+    
+    if (!/[0-9]/.test(newPassword)) {
+      setError("Password must contain at least one number");
+      setLoading(false);
+      return;
+    }
+    
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword)) {
+      setError("Password must contain at least one special character");
       setLoading(false);
       return;
     }
@@ -118,7 +142,7 @@ export function ChangePasswordModal({
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="Enter new password (min 8 characters)"
+            placeholder="Enter new password"
             required
             disabled={loading}
           />
@@ -134,33 +158,25 @@ export function ChangePasswordModal({
           />
 
           {newPassword && (
-            <div className="text-sm">
-              <p className="text-gray-600 mb-1">Password strength:</p>
-              <div className="flex gap-1">
-                <div
-                  className={`h-2 flex-1 rounded ${
-                    newPassword.length >= 8
-                      ? "bg-green-500"
-                      : "bg-red-500"
-                  }`}
-                />
-                <div
-                  className={`h-2 flex-1 rounded ${
-                    newPassword.length >= 10
-                      ? "bg-green-500"
-                      : "bg-gray-300"
-                  }`}
-                />
-                <div
-                  className={`h-2 flex-1 rounded ${
-                    newPassword.length >= 12 &&
-                    /[A-Z]/.test(newPassword) &&
-                    /[0-9]/.test(newPassword)
-                      ? "bg-green-500"
-                      : "bg-gray-300"
-                  }`}
-                />
-              </div>
+            <div className="text-xs space-y-1">
+              <p className="text-gray-600 font-medium">Password requirements:</p>
+              <ul className="space-y-0.5 text-gray-500">
+                <li className={newPassword.length >= 8 ? "text-green-600" : ""}>
+                  {newPassword.length >= 8 ? "✓" : "○"} At least 8 characters
+                </li>
+                <li className={/[A-Z]/.test(newPassword) ? "text-green-600" : ""}>
+                  {/[A-Z]/.test(newPassword) ? "✓" : "○"} One uppercase letter
+                </li>
+                <li className={/[a-z]/.test(newPassword) ? "text-green-600" : ""}>
+                  {/[a-z]/.test(newPassword) ? "✓" : "○"} One lowercase letter
+                </li>
+                <li className={/[0-9]/.test(newPassword) ? "text-green-600" : ""}>
+                  {/[0-9]/.test(newPassword) ? "✓" : "○"} One number
+                </li>
+                <li className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword) ? "text-green-600" : ""}>
+                  {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword) ? "✓" : "○"} One special character
+                </li>
+              </ul>
             </div>
           )}
 

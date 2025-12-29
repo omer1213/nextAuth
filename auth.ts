@@ -54,7 +54,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Query Supabase for user by email
         const { data: user, error } = await supabase
           .from("users")
-          .select("*")
+          .select("id, email, name, image, password_hash, email_verified")
           .eq("email", credentials.email)
           .single();
 
@@ -174,9 +174,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       // If token is null (expired), return null session
       if (!token) {
-        if (process.env.NODE_ENV === "development") {
-          console.log("❌ Session callback: Token is null");
-        }
         return null as any;
       }
 

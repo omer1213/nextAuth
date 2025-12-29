@@ -52,30 +52,13 @@ export async function POST(request: NextRequest) {
       .select();
 
     if (tokenError) {
-      console.error("❌ Error creating reset token:", tokenError);
-      console.error("Token error details:", JSON.stringify(tokenError, null, 2));
+      // Log error without sensitive data
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error creating reset token:", tokenError.message);
+      }
       return NextResponse.json(
         { error: "Failed to generate reset token" },
         { status: 500 }
-      );
-    }
-
-    console.log("✅ Password reset token created successfully:", {
-      identifier: email.toLowerCase(),
-      token: resetToken.substring(0, 10) + "...",
-      expires: expiresAt.toISOString(),
-      inserted: tokenData,
-    });
-
-    // In production, you would send an email here with the reset link:
-    // const resetLink = `${process.env.NEXTAUTH_URL}/reset-password/${resetToken}`;
-    // await sendEmail(email, "Password Reset", resetLink);
-
-    // Log reset token for development
-    if (process.env.NODE_ENV === "development") {
-      console.log(`Reset token for ${email}: ${resetToken}`);
-      console.log(
-        `Reset link: ${process.env.NEXTAUTH_URL}/reset-password/${resetToken}`
       );
     }
 
@@ -86,7 +69,10 @@ export async function POST(request: NextRequest) {
       resetToken: process.env.NODE_ENV === "development" ? resetToken : undefined,
     });
   } catch (error) {
-    console.error("Forgot password error:", error);
+    // Log error without sensitive data
+    if (process.env.NODE_ENV === "development") {
+      console.error("Forgot password error");
+    }
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 }

@@ -51,9 +51,21 @@ export default function SignupPage() {
       isValid = false;
     }
 
-    // Validate password
+    // Validate password strength
     if (formData.password.length < 8) {
       errors.password = "Password must be at least 8 characters";
+      isValid = false;
+    } else if (!/[A-Z]/.test(formData.password)) {
+      errors.password = "Password must contain at least one uppercase letter";
+      isValid = false;
+    } else if (!/[a-z]/.test(formData.password)) {
+      errors.password = "Password must contain at least one lowercase letter";
+      isValid = false;
+    } else if (!/[0-9]/.test(formData.password)) {
+      errors.password = "Password must contain at least one number";
+      isValid = false;
+    } else if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password)) {
+      errors.password = "Password must contain at least one special character";
       isValid = false;
     }
 
@@ -279,35 +291,27 @@ export default function SignupPage() {
             />
           </div>
 
-          {/* Password Strength Indicator */}
+          {/* Password Requirements */}
           {formData.password && (
-            <div className="text-sm">
-              <p className="text-gray-600 mb-1">Password strength:</p>
-              <div className="flex gap-1">
-                <div
-                  className={`h-2 flex-1 rounded ${
-                    formData.password.length >= 8
-                      ? "bg-green-500"
-                      : "bg-red-500"
-                  }`}
-                />
-                <div
-                  className={`h-2 flex-1 rounded ${
-                    formData.password.length >= 10
-                      ? "bg-green-500"
-                      : "bg-gray-300"
-                  }`}
-                />
-                <div
-                  className={`h-2 flex-1 rounded ${
-                    formData.password.length >= 12 &&
-                    /[A-Z]/.test(formData.password) &&
-                    /[0-9]/.test(formData.password)
-                      ? "bg-green-500"
-                      : "bg-gray-300"
-                  }`}
-                />
-              </div>
+            <div className="text-xs space-y-1">
+              <p className="text-gray-600 font-medium">Password requirements:</p>
+              <ul className="space-y-0.5 text-gray-500">
+                <li className={formData.password.length >= 8 ? "text-green-600" : ""}>
+                  {formData.password.length >= 8 ? "✓" : "○"} At least 8 characters
+                </li>
+                <li className={/[A-Z]/.test(formData.password) ? "text-green-600" : ""}>
+                  {/[A-Z]/.test(formData.password) ? "✓" : "○"} One uppercase letter
+                </li>
+                <li className={/[a-z]/.test(formData.password) ? "text-green-600" : ""}>
+                  {/[a-z]/.test(formData.password) ? "✓" : "○"} One lowercase letter
+                </li>
+                <li className={/[0-9]/.test(formData.password) ? "text-green-600" : ""}>
+                  {/[0-9]/.test(formData.password) ? "✓" : "○"} One number
+                </li>
+                <li className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password) ? "text-green-600" : ""}>
+                  {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password) ? "✓" : "○"} One special character
+                </li>
+              </ul>
             </div>
           )}
 

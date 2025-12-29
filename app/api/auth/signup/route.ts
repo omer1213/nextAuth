@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { sendVerificationEmail } from "@/lib/email";
+import { validatePasswordStrength } from "@/lib/password-validation";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,10 +32,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate password strength (min 8 characters)
-    if (password.length < 8) {
+    // Validate password strength
+    const passwordValidation = validatePasswordStrength(password);
+    if (!passwordValidation.isValid) {
       return NextResponse.json(
-        { error: "Password must be at least 8 characters long" },
+        { error: passwordValidation.errors.join(". ") },
         { status: 400 }
       );
     }
@@ -69,7 +71,10 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError || !newUser) {
-      console.error("Error creating user:", createError);
+      // Log error without sensitive data
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error creating user:", createError?.message);
+      }
       return NextResponse.json(
         { error: "Failed to create account. Please try again." },
         { status: 500 }
@@ -82,32 +87,20 @@ export async function POST(request: NextRequest) {
     expiresAt.setHours(expiresAt.getHours() + 24); // Token valid for 24 hours
 
     // Store verification token
-    console.log("🔍 Attempting to insert verification token...");
-    console.log("🔍 Email:", email.toLowerCase());
-    console.log("🔍 Token (first 10 chars):", verificationToken.substring(0, 10));
-    
-    const { data: tokenData, error: tokenError } = await supabase
+    const { error: tokenError } = await supabase
       .from("verification_tokens")
       .insert({
         identifier: email.toLowerCase(),
         token: verificationToken,
         expires: expiresAt.toISOString(),
-      })
-      .select();
+      });
 
     if (tokenError) {
-      console.error("❌ ERROR creating verification token!");
-      console.error("❌ Error code:", tokenError.code);
-      console.error("❌ Error message:", tokenError.message);
-      console.error("❌ Error details:", tokenError.details);
-      console.error("❌ Error hint:", tokenError.hint);
-      console.error("❌ Full error:", JSON.stringify(tokenError, null, 2));
-      
+      // Log error without sensitive data
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error creating verification token:", tokenError.message);
+      }
       // Don't fail signup if token creation fails - user can request resend
-      console.warn("⚠️ User created but token failed - user can request resend");
-    } else {
-      console.log("✅ Verification token created successfully!");
-      console.log("✅ Token data:", tokenData);
     }
 
     // Send verification email
@@ -121,12 +114,13 @@ export async function POST(request: NextRequest) {
         verificationToken
       );
       emailSent = true;
-      console.log("✅ Verification email sent to:", email);
     } catch (emailError) {
-      console.error("Error sending verification email:", emailError);
+      // Log error without sensitive data
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error sending verification email");
+      }
       // In development, provide the link as fallback
       verificationLink = `${process.env.NEXTAUTH_URL}/verify-email/${verificationToken}`;
-      console.log("⚠️ Email failed, verification link:", verificationLink);
     }
 
     return NextResponse.json(
@@ -148,7 +142,10 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Signup error:", error);
+    // Log error without sensitive data
+    if (process.env.NODE_ENV === "development") {
+      console.error("Signup error");
+    }
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 }
